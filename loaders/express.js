@@ -14,6 +14,10 @@ const expressLoader = async (app) => {
   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
   app.use(cookieParser());
+
+  app.listen(PORT, () =>
+    console.log(`Server listening on http://localhost:${PORT}`)
+  );
 };
 
 module.exports = expressLoader;
