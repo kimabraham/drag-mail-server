@@ -6,6 +6,19 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+  name: {
+    type: String,
+    required: true,
+  },
+  avatarUrl: {
+    type: String,
+    required: true,
+  },
+  googleId: {
+    type: String,
+    required: true,
+    unique: true,
+  },
   contacts: [
     {
       type: mongoose.Types.ObjectId,
