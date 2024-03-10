@@ -1,7 +1,10 @@
 const mongoose = require("mongoose");
 
 const projectSchema = new mongoose.Schema({
-  title: String,
+  title: {
+    type: String,
+    required: true,
+  },
   component: [
     {
       type: Object,
@@ -11,6 +14,10 @@ const projectSchema = new mongoose.Schema({
   contacts: {
     type: mongoose.Types.ObjectId,
     ref: "Contact",
+  },
+  creator: {
+    type: mongoose.Types.ObjectId,
+    ref: "User",
   },
   createdAt: {
     type: Date,
