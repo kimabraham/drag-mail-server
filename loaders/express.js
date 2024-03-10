@@ -3,16 +3,18 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const passport = require("passport");
 const session = require("express-session");
+const MongoStore = require("connect-mongo");
 
 const expressLoader = async (app) => {
   const PORT = process.env.PORT || 3000;
 
   app.use(
     session({
+      store: MongoStore.create({ mongoUrl: process.env.MONGO_URL }),
       secret: process.env.SESSION_SECRET,
       resave: false,
       saveUninitialized: true,
-      cookie: { secure: false },
+      cookie: { secure: false, maxAge: 1000 * 60 * 60 * 24 },
     })
   );
   app.use(
