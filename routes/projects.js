@@ -1,3 +1,4 @@
+require("../utils/passport");
 const express = require("express");
 const {
   getProjects,
@@ -10,6 +11,7 @@ const {
   getProject,
 } = require("../controllers/project.controller");
 const { verifyObjectId } = require("../middlewares/verifyObjectId");
+
 const router = express.Router();
 
 router.get("/", getProjects);

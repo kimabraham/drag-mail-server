@@ -25,11 +25,29 @@ exports.getProjects = async (req, res, next) => {
     next(error);
   }
 };
+
 exports.createProject = async (req, res, next) => {
   try {
+    const {
+      user: { _id },
+    } = req;
+
+    const userProjects = await Project.find({
+      creator: _id,
+      title: /My template/i,
+    });
+
+    const myTemplateCount = userProjects.length
+      ? Number(userProjects.at(-1).title.slice(11)) + 1
+      : "";
+
     const project = await Project.create({
-      title,
-      component,
+      title: `My template${myTemplateCount}`,
+      creator: _id,
+    });
+
+    await User.findByIdAndUpdate(_id, {
+      $push: { projects: project._id },
     });
 
     res.json({ success: true, project });
@@ -37,19 +55,30 @@ exports.createProject = async (req, res, next) => {
     next(error);
   }
 };
+
 exports.deleteProject = async (req, res, next) => {
   try {
     const {
+      user: { _id },
       params: { id },
     } = req;
+    const findProject = await Project.findById(id);
 
-    await Project.findByIdAndDelete(id);
+    if (req.user._id.equals(findProject.creator)) {
+      await User.findByIdAndUpdate(_id, {
+        $pull: { projects: id },
+      });
+      await Project.findByIdAndDelete(id);
 
-    res.json({ success: true });
+      res.json({ success: true });
+    } else {
+      throw Error("Unauthorized");
+    }
   } catch (error) {
     next(error);
   }
 };
+
 exports.modifyProject = async (req, res, next) => {
   try {
     const {
