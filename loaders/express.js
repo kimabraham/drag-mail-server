@@ -5,7 +5,7 @@ const passport = require("passport");
 const session = require("express-session");
 
 const expressLoader = async (app) => {
-  const PORT = process.env.PORT || 3001;
+  const PORT = process.env.PORT || 3000;
 
   app.use(
     session({
