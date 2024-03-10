@@ -4,8 +4,8 @@ const routerLoader = require("./routers");
 const errorHandlerLoader = require("./errorHandler");
 
 const appLoader = async (app) => {
-  await mongooseLoader();
   await expressLoader(app);
+  await mongooseLoader();
   await routerLoader(app);
   await errorHandlerLoader(app);
 };
