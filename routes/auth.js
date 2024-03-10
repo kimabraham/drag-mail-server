@@ -13,6 +13,7 @@ const router = express.Router();
 
 router.post("/signin", signIn);
 router.post("/signup", signUp);
+router.get("/logout", logout);
 router.get(
   "/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
@@ -26,6 +27,5 @@ router.get(
 );
 router.get("/success", verifyAuth);
 router.get("/failed", failedAuth);
-router.get("/logout", logout);
 
 module.exports = router;

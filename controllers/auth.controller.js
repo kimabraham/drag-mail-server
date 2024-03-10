@@ -22,12 +22,13 @@ exports.failedAuth = (req, res, next) => {
 };
 
 exports.logout = (req, res, next) => {
-  try {
-    req.logout();
+  req.logout((err) => {
+    if (err) {
+      console.log(err);
+      return next(err);
+    }
     res.redirect(process.env.CLIENT_URL);
-  } catch (error) {
-    next(error);
-  }
+  });
 };
 
 exports.signUp = async (req, res, next) => {};
