@@ -16,7 +16,10 @@ router.post("/signup", signUp);
 router.get("/logout", logout);
 router.get(
   "/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
+  passport.authenticate("google", {
+    scope: ["profile", "email"],
+    prompt: "select_account",
+  })
 );
 router.get(
   "/google/callback",
