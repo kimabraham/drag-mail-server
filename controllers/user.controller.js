@@ -30,7 +30,6 @@ exports.getUserContacts = async (req, res, next) => {
 
     res.json({ success: true, contacts });
   } catch (error) {
-    console.log(error);
     next(error);
   }
 };
