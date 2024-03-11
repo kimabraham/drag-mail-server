@@ -69,10 +69,11 @@ exports.createUserContact = async (req, res, next) => {
     next(error);
   }
 };
-exports.getUser = async (req, res, next) => {};
-exports.updateUser = async (req, res, next) => {};
-exports.deleteUser = async (req, res, next) => {
+exports.getUser = () => {};
+exports.updateUser = () => {};
+exports.deleteUser = (_, res, next) => {
   try {
+    res.json({ success: true });
   } catch (error) {
     next(error);
   }

@@ -5,7 +5,7 @@ const errorHandlerLoader = async (app) => {
     next(createError(404));
   });
 
-  app.use((err, req, res, next) => {
+  app.use((err, req, res) => {
     res.locals.message = err.message;
     res.locals.error = req.app.get("env") === "development" ? err : {};
 

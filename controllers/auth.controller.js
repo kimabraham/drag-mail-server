@@ -14,11 +14,15 @@ exports.verifyAuth = (req, res, next) => {
   }
 };
 
-exports.failedAuth = (req, res, next) => {
-  res.status(401).json({
-    error: true,
-    message: "Log in failure",
-  });
+exports.failedAuth = (_, res, next) => {
+  try {
+    res.status(401).json({
+      error: true,
+      message: "Log in failure",
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 exports.logout = (req, res, next) => {
@@ -31,5 +35,5 @@ exports.logout = (req, res, next) => {
   });
 };
 
-exports.signUp = async (req, res, next) => {};
-exports.signIn = async (req, res, next) => {};
+exports.signUp = () => {};
+exports.signIn = () => {};
