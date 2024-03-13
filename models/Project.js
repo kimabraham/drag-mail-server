@@ -7,8 +7,8 @@ const projectSchema = new mongoose.Schema({
   },
   component: [
     {
-      type: Object,
-      required: true,
+      type: mongoose.Types.ObjectId,
+      ref: "Node",
     },
   ],
   contacts: {
