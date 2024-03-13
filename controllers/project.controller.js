@@ -1,6 +1,7 @@
 const { isValidObjectId } = require("mongoose");
 const Project = require("../models/Project");
 const User = require("../models/User");
+const { saveNodeRecursive, convertDbToNode } = require("../utils/nodeToDb");
 
 exports.getProjects = async (req, res, next) => {
   try {
@@ -83,20 +84,30 @@ exports.modifyProject = async (req, res, next) => {
   try {
     const {
       params: { id },
+      body: { project },
     } = req;
 
-    await Project.findByIdAndUpdate(id, {});
+    const rootNodes = await Promise.all(
+      project.component.map((componentNode) => saveNodeRecursive(componentNode))
+    );
+
+    await Project.findByIdAndUpdate(id, {
+      ...project,
+      component: rootNodes.map((node) => node._id),
+    });
 
     res.json({ success: true });
   } catch (error) {
     next(error);
   }
 };
+
 exports.updateProject = async (req, res, next) => {
   try {
     // components에 push
     const {
       params: { id },
+      body,
     } = req;
 
     await Project.findByIdAndUpdate(id, {});
@@ -112,13 +123,30 @@ exports.getProject = async (req, res, next) => {
       params: { id },
     } = req;
 
-    const project = await Project.findById(id);
+    const project = await Project.findById(id).populate("component");
 
-    res.json({ success: true, project });
+    if (!project) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Project not found" });
+    }
+
+    const componentTrees = await Promise.all(
+      project.component.map((componentId) => convertDbToNode(componentId))
+    );
+
+    res.json({
+      success: true,
+      project: {
+        ...project.toObject(),
+        component: componentTrees,
+      },
+    });
   } catch (error) {
     next(error);
   }
 };
+
 exports.exportHtml = (req, res, next) => {
   try {
     // convert to html logic

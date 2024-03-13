@@ -5,7 +5,6 @@ exports.verifyObjectId = (req, res, next) => {
     const {
       params: { id },
     } = req;
-
     if (isValidObjectId(id)) {
       next();
     } else {
