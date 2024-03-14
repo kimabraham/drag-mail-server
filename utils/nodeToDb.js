@@ -3,9 +3,10 @@ const Node = require("../models/Node");
 exports.saveNodeRecursive = async (nodeData, parentId = null) => {
   try {
     const newNode = new Node({
-      nodeId: nodeData.id,
+      nodeId: nodeData.nodeId,
       tag: nodeData.tag,
       className: nodeData.className,
+      inner: nodeData.inner,
       props: nodeData.props || {},
       style: nodeData.style || {},
       parent: parentId,
@@ -47,6 +48,7 @@ exports.convertDbToNode = async (nodeId) => {
     nodeId: node.nodeId,
     tag: node.tag,
     className: node.className,
+    inner: node.inner,
     props: node.props,
     style: node.style,
     children: children,

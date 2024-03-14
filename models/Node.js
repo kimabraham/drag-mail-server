@@ -9,6 +9,9 @@ const nodeSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  inner: {
+    type: String,
+  },
   className: {
     type: String,
     required: true,

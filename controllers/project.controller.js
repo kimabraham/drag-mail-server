@@ -104,19 +104,36 @@ exports.modifyProject = async (req, res, next) => {
 
 exports.updateProject = async (req, res, next) => {
   try {
-    // components에 push
     const {
       params: { id },
-      body,
+      body: { projectId, nodeObject, newIndex },
     } = req;
 
-    await Project.findByIdAndUpdate(id, {});
+    const updateRowNode = await saveNodeRecursive(nodeObject);
 
-    res.json({ success: true });
+    if (id !== projectId) {
+      throw Error("Id is not matched.");
+    }
+
+    const project = await Project.findByIdAndUpdate(
+      id,
+      {
+        $push: {
+          component: {
+            $each: [updateRowNode._id],
+            $position: newIndex,
+          },
+        },
+      },
+      { new: true }
+    );
+
+    res.json({ success: true, project });
   } catch (error) {
     next(error);
   }
 };
+
 exports.getProject = async (req, res, next) => {
   try {
     const {
