@@ -1,7 +1,8 @@
-const { isValidObjectId } = require("mongoose");
+const mongoose = require("mongoose");
 const Project = require("../models/Project");
 const User = require("../models/User");
 const { saveNodeRecursive, convertDbToNode } = require("../utils/nodeToDb");
+const { PATCH_PROJECT_TYPES } = require("../utils/constants");
 
 exports.getProjects = async (req, res, next) => {
   try {
@@ -12,7 +13,7 @@ exports.getProjects = async (req, res, next) => {
     let projects;
 
     if (userId) {
-      if (isValidObjectId(userId)) {
+      if (mongoose.isValidObjectId(userId)) {
         projects = await Project.find({ creator: userId });
       } else {
         throw Error("Id is not objectID");
@@ -106,29 +107,53 @@ exports.updateProject = async (req, res, next) => {
   try {
     const {
       params: { id },
-      body: { projectId, nodeObject, newIndex },
+      body: { projectId, nodeObject, index, type },
     } = req;
 
-    const updateRowNode = await saveNodeRecursive(nodeObject);
+    let project;
 
-    if (id !== projectId) {
-      throw Error("Id is not matched.");
-    }
+    switch (type) {
+      case PATCH_PROJECT_TYPES.ADD_ROW:
+        const updateRowNode = await saveNodeRecursive(nodeObject);
 
-    const project = await Project.findByIdAndUpdate(
-      id,
-      {
-        $push: {
-          component: {
-            $each: [updateRowNode._id],
-            $position: newIndex,
+        if (id !== projectId) {
+          throw Error("Id is not matched.");
+        }
+
+        project = await Project.findByIdAndUpdate(
+          id,
+          {
+            $push: {
+              component: {
+                $each: [updateRowNode._id],
+                $position: index,
+              },
+            },
           },
-        },
-      },
-      { new: true }
-    );
+          { new: true }
+        );
 
-    res.json({ success: true, project });
+        return res.json({ success: true, project });
+      case PATCH_PROJECT_TYPES.REMOVE_ROW:
+        if (id !== projectId) {
+          throw Error("Id is not matched.");
+        }
+
+        const objectIdToRemove = new mongoose.Types.ObjectId(nodeObject.id);
+
+        project = await Project.findByIdAndUpdate(
+          id,
+          {
+            $pull: { component: objectIdToRemove },
+          },
+          { new: true }
+        );
+
+        console.log(project);
+
+        return res.json({ success: true, project });
+      default:
+    }
   } catch (error) {
     next(error);
   }

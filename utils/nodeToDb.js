@@ -15,7 +15,11 @@ exports.saveNodeRecursive = async (nodeData, parentId = null) => {
 
     const savedNode = await newNode.save();
 
-    if (nodeData.children && nodeData.children.length > 0) {
+    if (
+      nodeData.tag !== "img" &&
+      nodeData.children &&
+      nodeData.children.length > 0
+    ) {
       const childIds = [];
       for (const childNodeData of nodeData.children) {
         const childNode = await exports.saveNodeRecursive(
