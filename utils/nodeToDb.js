@@ -39,6 +39,18 @@ exports.saveNodeRecursive = async (nodeData, parentId = null) => {
   }
 };
 
+exports.collectAllChildNodeIds = async (nodeId) => {
+  const node = await Node.findById(nodeId);
+  if (!node) return [];
+
+  let ids = [node._id];
+  for (const childId of node.children) {
+    const childNodeIds = await exports.collectAllChildNodeIds(childId);
+    ids = ids.concat(childNodeIds);
+  }
+  return ids;
+};
+
 exports.convertDbToNode = async (nodeId) => {
   const node = await Node.findById(nodeId);
   if (!node) return null;
@@ -58,4 +70,20 @@ exports.convertDbToNode = async (nodeId) => {
     children: children,
     parent: node.parent,
   };
+};
+
+exports.findNodeByClassName = async (nodeId, className) => {
+  const node = await Node.findById(nodeId).populate("children");
+  if (!node) return null;
+
+  if (node.className === className) {
+    return node;
+  }
+
+  for (const child of node.children) {
+    const found = await exports.findNodeByClassName(child._id, className);
+    if (found) return found;
+  }
+
+  return null;
 };

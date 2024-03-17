@@ -1,8 +1,14 @@
 const mongoose = require("mongoose");
 const Project = require("../models/Project");
 const User = require("../models/User");
-const { saveNodeRecursive, convertDbToNode } = require("../utils/nodeToDb");
+const Node = require("../models/Node");
 const { PATCH_PROJECT_TYPES } = require("../utils/constants");
+const {
+  saveNodeRecursive,
+  convertDbToNode,
+  collectAllChildNodeIds,
+  findNodeByClassName,
+} = require("../utils/nodeToDb");
 
 exports.getProjects = async (req, res, next) => {
   try {
@@ -61,21 +67,34 @@ exports.createProject = async (req, res, next) => {
 exports.deleteProject = async (req, res, next) => {
   try {
     const {
-      user: { _id },
-      params: { id },
+      _id: userId,
+      params: { id: projectId },
     } = req;
-    const findProject = await Project.findById(id);
 
-    if (req.user._id.equals(findProject.creator)) {
-      await User.findByIdAndUpdate(_id, {
-        $pull: { projects: id },
-      });
-      await Project.findByIdAndDelete(id);
-
-      res.json({ success: true });
-    } else {
-      throw Error("Unauthorized");
+    const findProject = await Project.findById(projectId);
+    if (!findProject) {
+      return res.status(404).json({ message: "Project not found." });
     }
+
+    if (!req.user._id.equals(findProject.creator)) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    await User.findByIdAndUpdate(userId, { $pull: { projects: projectId } });
+
+    const allNodeIdsToDelete = [];
+    for (const rowId of findProject.component) {
+      const childNodeIds = await collectAllChildNodeIds(rowId);
+      allNodeIdsToDelete.push(...childNodeIds);
+    }
+
+    if (allNodeIdsToDelete.length > 0) {
+      await Node.deleteMany({ _id: { $in: allNodeIdsToDelete } });
+    }
+
+    await Project.findByIdAndDelete(projectId);
+
+    res.json({ success: true, message: "Project deleted successfully." });
   } catch (error) {
     next(error);
   }
@@ -107,8 +126,21 @@ exports.updateProject = async (req, res, next) => {
   try {
     const {
       params: { id },
-      body: { projectId, nodeObject, index, type },
+      body: { projectId, nodeObject, rowIndex, colIndex, type },
     } = req;
+
+    console.log(
+      "projectId",
+      projectId,
+      "nodeObject",
+      nodeObject,
+      "rowIndex",
+      rowIndex,
+      "colIndex",
+      colIndex,
+      "type",
+      type
+    );
 
     let project;
 
@@ -126,7 +158,7 @@ exports.updateProject = async (req, res, next) => {
             $push: {
               component: {
                 $each: [updateRowNode._id],
-                $position: index,
+                $position: rowIndex,
               },
             },
           },
@@ -149,10 +181,45 @@ exports.updateProject = async (req, res, next) => {
           { new: true }
         );
 
-        console.log(project);
+        const allNodeIdsToDelete = await collectAllChildNodeIds(
+          objectIdToRemove
+        );
+
+        await Node.deleteMany({ _id: { $in: allNodeIdsToDelete } });
 
         return res.json({ success: true, project });
+      case PATCH_PROJECT_TYPES.ADD_BLOCK:
+        const updatedBlockNode = await saveNodeRecursive(nodeObject);
+
+        if (id !== projectId) {
+          throw Error("Id is not matched.");
+        }
+
+        const findProject = await Project.findById(id);
+
+        const findContainerRow = await Node.findById(
+          findProject.component[rowIndex]
+        );
+
+        const contentRowNode = await findNodeByClassName(
+          findContainerRow._id,
+          "content-row"
+        );
+
+        const contentColId = contentRowNode.children[colIndex]._id;
+
+        const defaultTableIdToDelete =
+          contentRowNode.children[colIndex].children[0]._id;
+
+        await Node.findByIdAndDelete(defaultTableIdToDelete);
+
+        await Node.findByIdAndUpdate(contentColId, {
+          $set: { children: updatedBlockNode._id },
+        });
+
+        return res.json({ success: true });
       default:
+        break;
     }
   } catch (error) {
     next(error);
