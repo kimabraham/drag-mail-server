@@ -145,7 +145,7 @@ exports.updateProject = async (req, res, next) => {
     let project;
 
     switch (type) {
-      case PATCH_PROJECT_TYPES.ADD_ROW:
+      case PATCH_PROJECT_TYPES.ADD_ROW: {
         const updateRowNode = await saveNodeRecursive(nodeObject);
 
         if (id !== projectId) {
@@ -166,7 +166,8 @@ exports.updateProject = async (req, res, next) => {
         );
 
         return res.json({ success: true, project });
-      case PATCH_PROJECT_TYPES.REMOVE_ROW:
+      }
+      case PATCH_PROJECT_TYPES.REMOVE_ROW: {
         if (id !== projectId) {
           throw Error("Id is not matched.");
         }
@@ -188,7 +189,8 @@ exports.updateProject = async (req, res, next) => {
         await Node.deleteMany({ _id: { $in: allNodeIdsToDelete } });
 
         return res.json({ success: true, project });
-      case PATCH_PROJECT_TYPES.ADD_BLOCK:
+      }
+      case PATCH_PROJECT_TYPES.ADD_BLOCK: {
         const updatedBlockNode = await saveNodeRecursive(nodeObject);
 
         if (id !== projectId) {
@@ -218,6 +220,7 @@ exports.updateProject = async (req, res, next) => {
         });
 
         return res.json({ success: true });
+      }
       default:
         break;
     }

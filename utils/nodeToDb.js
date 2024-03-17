@@ -1,42 +1,38 @@
 const Node = require("../models/Node");
 
 exports.saveNodeRecursive = async (nodeData, parentId = null) => {
-  try {
-    const newNode = new Node({
-      nodeId: nodeData.nodeId,
-      tag: nodeData.tag,
-      className: nodeData.className,
-      inner: nodeData.inner,
-      props: nodeData.props || {},
-      style: nodeData.style || {},
-      parent: parentId,
-      children: [],
-    });
+  const newNode = new Node({
+    nodeId: nodeData.nodeId,
+    tag: nodeData.tag,
+    className: nodeData.className,
+    inner: nodeData.inner,
+    props: nodeData.props || {},
+    style: nodeData.style || {},
+    parent: parentId,
+    children: [],
+  });
 
-    const savedNode = await newNode.save();
+  const savedNode = await newNode.save();
 
-    if (
-      nodeData.tag !== "img" &&
-      nodeData.children &&
-      nodeData.children.length > 0
-    ) {
-      const childIds = [];
-      for (const childNodeData of nodeData.children) {
-        const childNode = await exports.saveNodeRecursive(
-          childNodeData,
-          savedNode._id
-        );
-        childIds.push(childNode._id);
-      }
-
-      savedNode.children = childIds;
-      await savedNode.save();
+  if (
+    nodeData.tag !== "img" &&
+    nodeData.children &&
+    nodeData.children.length > 0
+  ) {
+    const childIds = [];
+    for (const childNodeData of nodeData.children) {
+      const childNode = await exports.saveNodeRecursive(
+        childNodeData,
+        savedNode._id
+      );
+      childIds.push(childNode._id);
     }
 
-    return savedNode;
-  } catch (error) {
-    throw error;
+    savedNode.children = childIds;
+    await savedNode.save();
   }
+
+  return savedNode;
 };
 
 exports.collectAllChildNodeIds = async (nodeId) => {
