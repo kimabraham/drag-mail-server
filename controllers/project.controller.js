@@ -111,12 +111,16 @@ exports.modifyProject = async (req, res, next) => {
       project.component.map((componentNode) => saveNodeRecursive(componentNode))
     );
 
-    await Project.findByIdAndUpdate(id, {
-      ...project,
-      component: rootNodes.map((node) => node._id),
-    });
+    const updatedProject = await Project.findByIdAndUpdate(
+      id,
+      {
+        ...project,
+        component: rootNodes.map((node) => node._id),
+      },
+      { new: true }
+    );
 
-    res.json({ success: true });
+    res.json({ success: true, project: updatedProject });
   } catch (error) {
     next(error);
   }
@@ -128,19 +132,6 @@ exports.updateProject = async (req, res, next) => {
       params: { id },
       body: { projectId, nodeObject, rowIndex, colIndex, type },
     } = req;
-
-    console.log(
-      "projectId",
-      projectId,
-      "nodeObject",
-      nodeObject,
-      "rowIndex",
-      rowIndex,
-      "colIndex",
-      colIndex,
-      "type",
-      type
-    );
 
     let project;
 
@@ -171,7 +162,6 @@ exports.updateProject = async (req, res, next) => {
         if (id !== projectId) {
           throw Error("Id is not matched.");
         }
-
         const objectIdToRemove = new mongoose.Types.ObjectId(nodeObject.id);
 
         project = await Project.findByIdAndUpdate(
@@ -192,7 +182,6 @@ exports.updateProject = async (req, res, next) => {
       }
       case PATCH_PROJECT_TYPES.ADD_BLOCK: {
         const updatedBlockNode = await saveNodeRecursive(nodeObject);
-
         if (id !== projectId) {
           throw Error("Id is not matched.");
         }
@@ -213,11 +202,11 @@ exports.updateProject = async (req, res, next) => {
         const defaultTableIdToDelete =
           contentRowNode.children[colIndex].children[0]._id;
 
-        await Node.findByIdAndDelete(defaultTableIdToDelete);
-
         await Node.findByIdAndUpdate(contentColId, {
           $set: { children: updatedBlockNode._id },
         });
+
+        await Node.findByIdAndDelete(defaultTableIdToDelete);
 
         return res.json({ success: true });
       }
@@ -258,7 +247,6 @@ exports.getProject = async (req, res, next) => {
     next(error);
   }
 };
-
 exports.exportHtml = (req, res, next) => {
   try {
     // convert to html logic
