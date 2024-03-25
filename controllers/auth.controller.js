@@ -6,8 +6,6 @@ exports.verifyAuth = (req, res, next) => {
         message: "Successfully Loged In",
         user: req.user,
       });
-    } else {
-      throw Error("Not authorized");
     }
   } catch (error) {
     next(error);

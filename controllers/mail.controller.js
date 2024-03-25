@@ -1,62 +1,52 @@
-const { google } = require("googleapis");
+const Project = require("../models/Project");
+const Node = require("../models/Node");
 const { configureOAuthClient, getOAuthTokens } = require("../utils/auth");
-const { encodeWord } = require("../utils/sendMail");
+const {
+  createEmailContent,
+  encodeEmail,
+  sendEmail,
+  generateHTML,
+} = require("../utils/sendMail");
 
 exports.sendMail = async (req, res, next) => {
   try {
     const {
       user,
-      body: { subject, receivers, code },
+      body: { subject, receivers, code, template },
     } = req;
 
     const auth = configureOAuthClient();
     const tokens = await getOAuthTokens(code, auth);
     auth.setCredentials(tokens);
-    const gmail = google.gmail({ version: "v1", auth });
 
-    const emailLines = [];
+    const findProject = await Project.findById(template);
 
-    const encodedSubject = encodeWord(subject);
+    const test = await Promise.all(
+      findProject.component.map((row) => generateHTML(row))
+    );
+
+    const result = `<table style="width:600px">${test.join("")}</table>`;
+
     const receiverStrings = receivers
-      .map((receiver) => {
-        const encodedName = encodeWord(receiver.name);
-        return `${encodedName} <${receiver.email}>`;
-      })
+      .map(({ name, email }) => encodeEmail(name, email))
       .join(", ");
-
-    emailLines.push(`From: "${user.name}" <${user.email}>`);
-    emailLines.push(`To: ${receiverStrings}`);
-    // if (bccReceivers && bccReceivers.length > 0) {
-    //   emailLines.push(`Bcc: ${bccRecipients}`);
-    // }
-    emailLines.push("Content-type: text/html;charset=utf-8");
-    emailLines.push("MIME-Version: 1.0");
-    emailLines.push(`Subject: ${encodedSubject}`);
-    emailLines.push("");
-    emailLines.push("<strong>헬로우월드</strong>");
-
-    const email = emailLines.join("\r\n").trim();
-
-    const base64EncodedEmail = Buffer.from(email)
+    const emailContent = createEmailContent(
+      user,
+      subject,
+      receiverStrings,
+      result
+    );
+    const base64EncodedEmail = Buffer.from(emailContent)
       .toString("base64")
       .replace(/\+/g, "-")
       .replace(/\//g, "_");
 
-    gmail.users.messages.send(
-      {
-        userId: "me",
-        resource: {
-          raw: base64EncodedEmail,
-        },
-      },
-      (err, res) => {
-        if (err) {
-          console.log("The API returned an error: " + err);
-          return;
-        }
-      }
-    );
-    res.json({ success: true });
+    const success = await sendEmail(auth, base64EncodedEmail);
+    if (success) {
+      res.json({ success: true });
+    } else {
+      res.status(500).send("Failed to send email");
+    }
   } catch (error) {
     console.error(error);
     res.status(500).send("Internal Server Error");

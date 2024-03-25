@@ -9,6 +9,7 @@ const {
   collectAllChildNodeIds,
   findNodeByClassName,
 } = require("../utils/nodeToDb");
+const passport = require("passport");
 
 exports.getProjects = async (req, res, next) => {
   try {
@@ -247,6 +248,7 @@ exports.getProject = async (req, res, next) => {
     next(error);
   }
 };
+
 exports.exportHtml = (req, res, next) => {
   try {
     // convert to html logic
@@ -254,9 +256,20 @@ exports.exportHtml = (req, res, next) => {
     next(error);
   }
 };
+
 exports.exportGoogle = (req, res, next) => {
   try {
     // convert to google template logic
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.createProjectByDemo = async (req, res, next) => {
+  try {
+    const { user, body } = req;
+
+    res.json({ success: true, project: newProject });
   } catch (error) {
     next(error);
   }

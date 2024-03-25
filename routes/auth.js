@@ -8,6 +8,7 @@ const {
   signIn,
   signUp,
 } = require("../controllers/auth.controller");
+const Project = require("../models/Project");
 
 const router = express.Router();
 
@@ -19,15 +20,46 @@ router.get(
   passport.authenticate("google", {
     scope: ["profile", "email"],
     prompt: "select_account",
+    state: "normal",
   })
 );
+
 router.get(
-  "/google/callback",
+  "/demo",
   passport.authenticate("google", {
-    successRedirect: process.env.CLIENT_URL,
-    failureRedirect: "/api/auth/failed",
+    scope: ["profile", "email"],
+    prompt: "select_account",
+    state: "demo",
   })
 );
+
+router.get("/google/callback", (req, res, next) => {
+  passport.authenticate("google", (err, user, info) => {
+    if (err) {
+      return next(err);
+    }
+    if (!user) {
+      return res.redirect("/api/auth/failed");
+    }
+    req.logIn(user, async function (err) {
+      if (err) {
+        return next(err);
+      }
+      const state = req.query.state;
+      if (state === "demo") {
+        const project = await Project.create({
+          title: "demo",
+          creator: user._id,
+        });
+
+        res.redirect(`${process.env.CLIENT_URL}/template/${project._id}`);
+      } else {
+        res.redirect(process.env.CLIENT_URL);
+      }
+    });
+  })(req, res, next);
+});
+
 router.get("/success", verifyAuth);
 router.get("/failed", failedAuth);
 

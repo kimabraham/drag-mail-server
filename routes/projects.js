@@ -4,6 +4,7 @@ const {
   getProjects,
   createProject,
   deleteProject,
+  createProjectByDemo,
   modifyProject,
   updateProject,
   exportHtml,
@@ -16,6 +17,7 @@ const router = express.Router();
 
 router.get("/", getProjects);
 router.post("/", createProject);
+router.post("/demo", createProjectByDemo);
 router.delete("/:id", verifyObjectId, deleteProject);
 router.put("/:id", verifyObjectId, modifyProject);
 router.patch("/:id", verifyObjectId, updateProject);
