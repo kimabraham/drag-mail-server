@@ -12,7 +12,7 @@ exports.sendMail = async (req, res, next) => {
   try {
     const {
       user,
-      body: { subject, receivers, code, template },
+      body: { subject, bccs, receivers, code, template },
     } = req;
 
     const auth = configureOAuthClient();
@@ -21,19 +21,27 @@ exports.sendMail = async (req, res, next) => {
 
     const findProject = await Project.findById(template);
 
-    const test = await Promise.all(
+    const rows = await Promise.all(
       findProject.component.map((row) => generateHTML(row))
     );
 
-    const result = `<table style="width:600px">${test.join("")}</table>`;
+    const result = `<table style="width:100%;"><tr style="width:100%;"><td style="width:100%;background-color:#f5f6fa;padding-top:30px;padding-bottom:30px;"><table style="width:600px;background-color:white;margin:auto;border:0;border-collapse:collapse;">${rows.join(
+      ""
+    )}</table></td></tr></table>`;
 
     const receiverStrings = receivers
       .map(({ name, email }) => encodeEmail(name, email))
       .join(", ");
+
+    const bccStrings = bccs
+      .map(({ name, email }) => encodeEmail(name, email))
+      .join(", ");
+
     const emailContent = createEmailContent(
       user,
       subject,
       receiverStrings,
+      bccStrings,
       result
     );
     const base64EncodedEmail = Buffer.from(emailContent)

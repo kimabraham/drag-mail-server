@@ -19,9 +19,9 @@ router.get("/", getProjects);
 router.post("/", createProject);
 router.post("/demo", createProjectByDemo);
 router.delete("/:id", verifyObjectId, deleteProject);
-router.put("/:id", verifyObjectId, modifyProject);
-router.patch("/:id", verifyObjectId, updateProject);
-router.get("/:id", verifyObjectId, getProject);
+router.put("/:id", modifyProject);
+router.patch("/:id", updateProject);
+router.get("/:id", getProject);
 router.post("/html", exportHtml);
 router.post("/google", exportGoogle);
 

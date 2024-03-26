@@ -9,7 +9,6 @@ const {
   collectAllChildNodeIds,
   findNodeByClassName,
 } = require("../utils/nodeToDb");
-const passport = require("passport");
 
 exports.getProjects = async (req, res, next) => {
   try {
@@ -183,6 +182,7 @@ exports.updateProject = async (req, res, next) => {
       }
       case PATCH_PROJECT_TYPES.ADD_BLOCK: {
         const updatedBlockNode = await saveNodeRecursive(nodeObject);
+
         if (id !== projectId) {
           throw Error("Id is not matched.");
         }

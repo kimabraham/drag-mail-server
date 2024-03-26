@@ -1,12 +1,13 @@
 exports.verifyAuth = (req, res, next) => {
   try {
     if (req.user) {
-      res.json({
+      return res.json({
         success: true,
         message: "Successfully Loged In",
         user: req.user,
       });
     }
+    res.json({ success: false });
   } catch (error) {
     next(error);
   }

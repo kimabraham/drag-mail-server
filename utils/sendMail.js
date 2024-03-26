@@ -10,10 +10,17 @@ exports.encodeEmail = (name, email) => {
   return `${encodedName} <${email}>`;
 };
 
-exports.createEmailContent = (user, subject, receiverStrings, content) => {
+exports.createEmailContent = (
+  user,
+  subject,
+  receiverStrings,
+  bccReceiverStrings,
+  content
+) => {
   const emailLines = [
     `From: "${exports.encodeEmail(user.name, user.email)}"`,
     `To: ${receiverStrings}`,
+    `Bcc: ${bccReceiverStrings}`,
     "Content-type: text/html;charset=utf-8",
     "MIME-Version: 1.0",
     `Subject: ${encodeWord(subject)}`,
@@ -65,7 +72,7 @@ exports.generateHTML = async (nodeId) => {
     )}">`;
 
     if (node.inner) {
-      html += node.inner;
+      html += node.inner.trim();
     }
 
     if (node.children && node.children.length > 0) {

@@ -8,6 +8,6 @@ const {
 const router = express.Router();
 
 router.put("/:id", modifyNode);
-router.delete("/:id", verifyObjectId, removeBlockNode);
+router.delete("/:id", removeBlockNode);
 
 module.exports = router;

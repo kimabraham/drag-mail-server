@@ -8,16 +8,17 @@ exports.modifyNode = async (req, res, next) => {
       },
     } = req;
 
-    await Node.findOneAndUpdate(
+    const newNode = await Node.findOneAndUpdate(
       { nodeId },
       {
         props,
         style,
         inner,
-      }
+      },
+      { new: true }
     );
 
-    return res.json({ success: true });
+    return res.json({ success: true, node: newNode });
   } catch (error) {
     next(error);
   }
